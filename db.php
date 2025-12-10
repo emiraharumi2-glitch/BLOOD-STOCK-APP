@@ -1,0 +1,14 @@
+<?php
+$servername = "localhost"; // atau IP address server database
+$username = "root"; // username database
+$password = ""; // password database (kosong jika Anda tidak mengatur password)
+$dbname = "blood"; // nama database yang Anda gunakan
+
+// Membuat koneksi
+$conn = new mysqli ($servername, $username, $password, $dbname);
+
+// Memeriksa koneksi
+if ($conn->connect_error) {
+    die("Koneksi gagal: " . $conn->connect_error);
+}
+?>
