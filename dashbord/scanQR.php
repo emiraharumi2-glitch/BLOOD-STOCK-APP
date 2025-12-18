@@ -12,13 +12,12 @@ $error = null;
 $success = null;
 $used = false;
 
-// ===================== 1. AMBIL ID DARI QR =====================
+// ===================== AMBIL ID DARI QR =====================
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($id <= 0) {
     $error = "QR Code tidak valid. ID tidak ditemukan.";
 }
-
-// ===================== 2. AMBIL DATA DARI DATABASE BERDASARKAN ID =====================
+// ========AMBIL DATA DARI DATABASE BERDASARKAN ID =======
 $blood_type = "";
 $size = "";
 $tanggal_masuk = "";
@@ -27,86 +26,60 @@ $tanggal_masuk_display = "";
 $date_out = "";
 $date_out_display = "";
 
+$found_active = false;
 
-if (!$error) {
-    $stmt = $conn->prepare("SELECT blood_type, size, tanggal_masuk FROM blood_stock WHERE id = ?");
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $stmt->bind_result($blood_type, $size, $tanggal_masuk);
+/* ================= CEK DATA AKTIF ================= */
+$stmt = $conn->prepare("
+    SELECT blood_type, size, tanggal_masuk
+    FROM blood_stock
+    WHERE id = ? AND status = 'aktif'
+");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$stmt->bind_result($blood_type, $size, $tanggal_masuk);
 
-    if (!$stmt->fetch()) {
-        // Jika tidak ada → berarti stok sudah digunakan
-        $used = true;
-    }
-    $stmt->close();
-    
+if ($stmt->fetch()) {
+    $found_active = true;
+}
+$stmt->close();
 
-    if (!$used) {
-        // Format tanggal untuk tampilan
-        $dateTime = new DateTime($tanggal_masuk);
-        $tanggal_masuk_post = $dateTime->format('Y-m-d H:i:s');
-        $tanggal_masuk_display = $dateTime->format('H:i:s / d-m-Y');
-    }
-    if ($used) {
-    // AMBIL DATA DARI blood_out
-    $stmt2 = $conn->prepare("SELECT blood_type, size, tanggal_masuk, date_out FROM blood_out WHERE id = ?");
+/* ================= JIKA MASIH AKTIF ================= */
+if ($found_active) {
+
+    $dateTime = new DateTime($tanggal_masuk);
+    $tanggal_masuk_post = $dateTime->format('Y-m-d H:i:s');
+    $tanggal_masuk_display = $dateTime->format('H:i:s / d-m-Y');
+
+}
+/* ================= JIKA TIDAK AKTIF ================= */
+else {
+
+    // CEK APAKAH SUDAH DIGUNAKAN
+    $stmt2 = $conn->prepare("
+        SELECT blood_type, size, tanggal_masuk, date_out
+        FROM blood_out
+        WHERE id = ?
+    ");
     $stmt2->bind_param("i", $id);
     $stmt2->execute();
     $stmt2->bind_result($blood_type, $size, $tanggal_masuk, $date_out);
-    $stmt2->fetch();
+
+    if ($stmt2->fetch()) {
+
+        // ✅ BENAR-BENAR SUDAH DIGUNAKAN
+        $used = true;
+        $tanggal_masuk_display = (new DateTime($tanggal_masuk))->format('H:i:s / d-m-Y');
+        $date_out_display = (new DateTime($date_out))->format('H:i:s / d-m-Y');
+
+    } else {
+
+        // ❌ DIHAPUS SEBELUM DIGUNAKAN
+        $error = "Data tidak ditemukan atau telah dihapus.";
+
+    }
     $stmt2->close();
 }
-}
-if ($used && !empty($tanggal_masuk)) {
-    $dt = new DateTime($tanggal_masuk);
-    $tanggal_masuk_display = $dt->format('H:i:s / d-m-Y');
-}
-if ($used && !empty($date_out)) {
-    $dt2 = new DateTime($date_out);
-    $date_out_display = $dt2->format('H:i:s / d-m-Y');
-}
 
-
-// ===================== 3. KONFIRMASI PENGGUNAAN =====================
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_usage'])) {
-    
-    // SIMPAN DATA SEBELUM DIHAPUS
-    $old_blood_type = $blood_type;
-    $old_size = $size;
-    $old_tanggal_masuk = $tanggal_masuk;
-
-    $conn->begin_transaction();
-    try {
-        // 1. Pindahkan ke tabel blood_out
-        $stmt_insert = $conn->prepare("
-            INSERT INTO blood_out (id, blood_type, size, tanggal_masuk, date_out, is_used)
-            VALUES (?, ?, ?, ?, NOW(), 1)
-        ");
-        $stmt_insert->bind_param("isss", $id, $blood_type, $size, $tanggal_masuk_post);
-        $stmt_insert->execute();
-        $stmt_insert->close();
-
-        // 2. Hapus dari stok darah
-        $stmt_del = $conn->prepare("DELETE FROM blood_stock WHERE id = ? LIMIT 1");
-        $stmt_del->bind_param("i", $id);
-        $stmt_del->execute();
-
-        if ($stmt_del->affected_rows === 0) {
-            throw new Exception("Data tidak ditemukan untuk dihapus.");
-        }
-
-        
-        $stmt_del->close();
-        $conn->commit();
-
-        $success = "Stok darah berhasil digunakan.";
-        $used = true;
-
-    } catch (Exception $e) {
-        $conn->rollback();
-        $error = "Gagal menggunakan stok darah: " . $e->getMessage();
-    }
-}
 ?>
 
 <!DOCTYPE html>
@@ -150,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_usage'])) {
             display: flex;
             flex-direction: column;
             gap: 15px;
-            flex-grow: 1; /* Memungkinkan nav untuk mengambil ruang yang tersedia */
+            flex-grow: 1; 
         }
         .sidebar nav a {
             text-decoration: none;
@@ -170,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_usage'])) {
             color: white;
         }
         .logout {
-            margin-top: auto; /* Memindahkan tombol logout ke bawah */
+            margin-top: auto; 
             margin-bottom: 20px;
             margin-left: 10px; 
             margin-right: 10px; 
@@ -178,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_usage'])) {
             color: white;
             font-weight: 700;
             font-size: 15px; 
-            padding: 5px 10px; /*jarak box dari font */
+            padding: 5px 10px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -190,15 +163,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_usage'])) {
         }
         .wrapper {
             flex: 1;
-            background-image: url('../images/h.png'); /* Ganti dengan path gambar Anda */
-            background-size: cover; /* Memastikan gambar menutupi seluruh area */
-            background-position: center; /* Memposisikan gambar di tengah */
-            background-repeat: no-repeat;
+
             width: 380px;
             border-radius: 10px;
             box-shadow: 0px 15px 20px rgba(245, 12, 12, 0.1);
             padding: 20px;
-            margin-right: 20px; /* Jarak antara konten utama dan sidebar */
+            margin-right: 20px; 
             text-align: center;
         }
         .wrapper .title {
@@ -215,27 +185,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_usage'])) {
             margin-top: 10px;
             flex-direction: column;
             row-gap: 22px;
-            align-items: center; /* Pindahkan ke tengah */
+            align-items: center;
             color: #262626;
             font-size: 25px;
-            text-align: center; /* Pindahkan teks ke tengah */
+            text-align: center; 
             background-color: #fff;
-            width: 100%; /* Pastikan lebar data penuh */
-            padding: 15px; /* Tambahkan padding untuk data */
-            border-radius: 10px; /* Tambahkan border-radius untuk data */
+            width: 100%; 
+            padding: 15px; 
+            border-radius: 10px; 
         }
         .data-item {
-            display: flex; /* Selaras tabel dan nilai horizontal */
-            justify-content: space-between; /* space-between Menyebar teks, flex-start untuk kekiri dan tengah*/
-            width: 100%; /* Mengatur lebar penuh */
-            align-items: center; /* Pusatkan secara vertikal */
+            display: flex; 
+            justify-content: space-between; 
+            width: 100%;
+            align-items: center; 
         }
         .label {
             font-weight: 700;
             color:rgb(0, 0, 0);
             text-align: left;
             font-size: 20px; 
-            width: 190px; /* Lebar label */
+            width: 190px; 
             margin-left: 45px; 
         }
         .value {
@@ -250,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_usage'])) {
             color:rgb(0, 0, 0);
             text-align: center;
             font-size: 20px; 
-            width: 20px; /* Lebar tanda = */
+            width: 20px; 
         }
         .btn-container {
             width: 100%; 
@@ -268,7 +238,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_usage'])) {
             transition: all 0.3s ease;
             background: linear-gradient(-135deg, rgb(224, 17, 17), rgb(236, 105, 105));
             color: white;
-            margin-top: 20px; /* Tambahkan margin atas untuk jarak */
+            margin-top: 20px; 
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .btn:hover {
@@ -288,7 +258,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_usage'])) {
             text-align: center;
             margin: 2px 0;
         }
-        .used {  /* Baru: Style untuk pesan "sudah digunakan" (oranye, mirip success tapi warning) */
+        .used {  
             font-size: 18px;
             color: #d97706;
             font-weight: 600;
@@ -328,13 +298,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_usage'])) {
                 <div class="error"><?= htmlspecialchars($error) ?></div>
             <?php elseif ($success): ?>
                 <div class="success"><?= htmlspecialchars($success) ?></div>
-            <?php elseif ($used): ?>  <!-- Baru: Tampilkan pesan jika sudah digunakan -->
+            <?php elseif ($used): ?>  
                 <div class="used">Stok darah sudah digunakan</div>
             <?php endif; ?>
             <?php if (!$error && ($blood_type || $used)): ?>
-                <!-- Tampilkan data hanya jika valid (tidak ada error dan data ada) -->
                <?php 
-                // Jika sudah digunakan, tampilkan kembali data lama
                 if ($used && isset($old_blood_type)) {
                     $blood_type = $old_blood_type;
                     $size = $old_size;
@@ -364,7 +332,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_usage'])) {
                 </div>
             <?php endif; ?>
 
-                <?php if (!$used): ?>  <!-- Baru: Hilangkan form/tombol jika sudah used -->
+                <?php if (!$used): ?>  
                 <form method="post" action="" id="use-blood-form">
                     <input type="hidden" name="size" value="<?= htmlspecialchars($size) ?>">
                     <input type="hidden" name="tanggal_masuk" value="<?= htmlspecialchars($tanggal_masuk_post) ?>">
@@ -375,7 +343,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_usage'])) {
                         </button>
                     </div>
                 </form>
-                <?php endif; ?>  <!-- Tutup kondisi if (!$used) -->
+                <?php endif; ?>  
             <?php endif; ?>
         </div>
     </div>

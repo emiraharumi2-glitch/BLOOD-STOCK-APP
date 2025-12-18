@@ -12,7 +12,7 @@ if (!isset($_GET['id']) || ($id = intval($_GET['id'])) <= 0) {
     die("ID data tidak ditemukan atau tidak valid.");
 }
 try {
-    $stmt = $conn->prepare("SELECT blood_type, size, tanggal_masuk FROM blood_stock WHERE id = ?");
+    $stmt = $conn->prepare("SELECT blood_type, size, tanggal_masuk FROM blood_stock WHERE id = ? AND status = 'aktif'");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $stmt->bind_result($blood_type, $size, $tanggal_masuk);

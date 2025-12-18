@@ -16,24 +16,20 @@ $tanggal_masuk_val = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $blood_type = $_POST['blood_type'];
     $size = $_POST['size'];
-    $tanggal_input = $_POST['tanggal_masuk']; // format: d-m-Y dari Flatpickr
-    // Konversi tanggal dari d-m-Y ke Y-m-d untuk database
-    $date_obj = DateTime::createFromFormat('d-m-Y', $tanggal_input);
+    $tanggal_input = $_POST['tanggal_masuk']; 
+    $date_obj = DateTime::createFromFormat('d-m-Y', $tanggal_input); // Konversi  d-m-Y ke Y-m-d 
     if ($date_obj) {
         $tanggal_input_db = $date_obj->format('Y-m-d');
     } else {
-        $tanggal_input_db = null; // tangani error jika perlu
+        $tanggal_input_db = null; 
     }
-    // Simpan nilai input untuk ditampilkan kembali jika perlu
     $blood_type_val = $blood_type;
     $size_val = $size;
     $tanggal_masuk_val = $tanggal_input;
-    $waktu_sekarang = date('H:i:s'); // waktu saat ini
-
+    $waktu_sekarang = date('H:i:s'); 
     if ($tanggal_input_db !== null) {
         $tanggal_masuk = $tanggal_input_db . ' ' . $waktu_sekarang;
     } else {
-        // Jika tanggal tidak valid, set tanggal sekarang
         $tanggal_masuk = date('Y-m-d') . ' ' . $waktu_sekarang;
     }
     $stmt = $conn->prepare("INSERT INTO blood_stock (blood_type, size, tanggal_masuk) VALUES (?, ?, ?)");
@@ -134,10 +130,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         .wrapper {
             flex: 1;
-            background-image: url('../images/h.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
             width: 380px;
             border-radius: 10px;
             box-shadow: 0px 15px 20px rgba(245, 12, 12, 0.1);
@@ -161,7 +153,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             margin-top: 12px;
             position: relative;
         }
-        /* Style untuk select dan input text (flatpickr altInput) */
         .wrapper form .field select,
         .wrapper form .field input[type="text"] {
             height: 100%;
@@ -173,13 +164,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             border-radius: 25px;
             transition: all 0.3s ease;
             box-sizing: border-box;
-            color: #0e0d0d99; /* default warna teks */
+            color: #0e0d0d99; 
         }
         .wrapper form .field select:focus,
         .wrapper form .field input[type="text"]:focus {
             border-color: #4158d0;
         }
-        /* Override style default flatpickr altInput */
         input.flatpickr-alt-input {
             height: 100% !important;
             width: 100% !important;
@@ -199,7 +189,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             border-color: #4158d0 !important;
             box-shadow: none !important;
         }
-        /* Override placeholder warna agar tidak pudar */
         input.flatpickr-alt-input::placeholder,
         input.flatpickr-alt-input::-webkit-input-placeholder,
         input.flatpickr-alt-input:-moz-placeholder,
@@ -288,7 +277,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             altFormat: "d-m-Y",
             allowInput: true
         });
-        // Script untuk mengubah class placeholder pada select agar warna teks berubah
         document.querySelectorAll('select').forEach(function(select) {
             function updateClass() {
                 if (select.value === '') {

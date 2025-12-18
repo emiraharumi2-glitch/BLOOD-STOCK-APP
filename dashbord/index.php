@@ -1,17 +1,14 @@
 <?php
 session_start();
-// Memastikan pengguna sudah login
 if (!isset($_SESSION['username'])) {
     header("Location: login.php");
     exit();
 }
-//ambil username dari halaman login 
 $username = $_SESSION ['username'];
 ?>
 
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-
 <head>
     <meta charset="utf-8">
     <title>Dashboard</title>
@@ -24,14 +21,12 @@ $username = $_SESSION ['username'];
             box-sizing: border-box;
             font-family: 'Poppins', sans-serif;
         }
-
         body {
             display: flex;
             height: 100vh;
-            background: #f2f2f2;
+            background: rgb(255, 253, 253);
             
         }
-
         .sidebar {
             width: 220px;
             background: white;
@@ -42,7 +37,6 @@ $username = $_SESSION ['username'];
             user-select: none;
             margin-left: 20px; /* Jarak antara sidebar dan konten utama */
         }
-
         .sidebar .greeting {
             font-size: 23px;
             font-weight: 600;
@@ -51,14 +45,12 @@ $username = $_SESSION ['username'];
             font-style: italic;
             margin: 0; 
         }
-
         .sidebar nav {
             display: flex;
             flex-direction: column;
             gap: 15px;
             flex-grow: 1; /* Memungkinkan nav untuk mengambil ruang yang tersedia */
         }
-
         .sidebar nav a {
             text-decoration: none;
             color: #4178d6;
@@ -71,12 +63,10 @@ $username = $_SESSION ['username'];
             cursor: pointer;
             display: block; /* Mengubah menjadi block agar memenuhi lebar */
         }
-
         .sidebar nav a:hover {
             background: rgb(214, 65, 65);
             color: white;
         }
-
         .logout {
             margin-top: auto; /* Memindahkan tombol logout ke bawah */
             margin-bottom: 20px;
@@ -93,25 +83,18 @@ $username = $_SESSION ['username'];
             text-align: center;
             transition: background-color 0.3s ease;
         }
-
         .sidebar .logout:hover {
             background:rgb(163, 33, 70);
         }
-
         .wrapper {
             flex: 1;
-            background-image: url('../images/h.png'); /* Ganti dengan path gambar Anda */
-            background-size: cover; /* Memastikan gambar menutupi seluruh area */
-            background-position: center; /* Memposisikan gambar di tengah */
-            background-repeat: no-repeat; /* Menghindari pengulangan gambar */
-            border-radius: 10px;
+            width: 380px; 
             box-shadow: 0px 20px 20px rgba(245, 12, 12, 0.1);
             padding: 0px;
             text-align: center;
             margin-right: 20px; /* Jarak antara konten utama dan sidebar */
             color: white; /* Ubah warna teks jika perlu */
         }
-
         .wrapper .title {
             font-size: 45px;
             font-weight: 1000;
@@ -121,7 +104,6 @@ $username = $_SESSION ['username'];
             background: linear-gradient(-135deg,rgb(224, 17, 17));
             font-style: italic; 
         }
-
         .wrapper .options {
             font-size: 25px;
             font-weight: 500; /*tebal font */
@@ -133,7 +115,6 @@ $username = $_SESSION ['username'];
             padding: 20px; 
             gap: 13px; /* Jarak antar tombol */
         }
-
         .wrapper .options a {
             width: 400px; /* Mengatur lebar tombol */
             padding: 15px;
@@ -144,7 +125,6 @@ $username = $_SESSION ['username'];
             border-radius: 25px;
             transition: background 0.3s ease;
         }
-
         .wrapper .options a:hover {
             background: linear-gradient(-135deg,rgb(214, 37, 37));
         }
@@ -166,7 +146,6 @@ $username = $_SESSION ['username'];
     </nav>
     <button class="logout" onclick="window.location.href='../login.php'">Logout</button>
     </div>
-
     <div class="wrapper">
         <div class="title">
             Dashboard
@@ -177,5 +156,4 @@ $username = $_SESSION ['username'];
         </div>
     </div>
 </body>
-
 </html>

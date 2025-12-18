@@ -1,16 +1,15 @@
 <?php
 session_start();
-require_once '../db.php'; // Menghubungkan ke database
+require_once '../db.php'; 
 if (!isset($_SESSION['username'])) {
     header("Location: ../login.php");
     exit();
 }
 $username = $_SESSION['username']; 
 
-// Mengambil data dari tabel blood_stock
-$sql_masuk = "SELECT blood_type, size, COUNT(size) as total FROM blood_stock GROUP BY blood_type, size";
+
+$sql_masuk = "SELECT blood_type, size, COUNT(size) as total FROM blood_stock WHERE status = 'aktif' GROUP BY blood_type, size";
 $result_masuk = $conn->query($sql_masuk); 
-// Inisialisasi array untuk menyimpan stok darah berdasarkan ukuran
 $blood_stock = [
     'A' => ['250' => 0, '350' => 0, '450' => 0],
     'B' => ['250' => 0, '350' => 0, '450' => 0],
@@ -24,7 +23,6 @@ if ($result_masuk->num_rows > 0) {
 }
 $sql_keluar = "SELECT blood_type, size, COUNT(size) as total FROM blood_out GROUP BY blood_type, size";
 $result_keluar = $conn->query($sql_keluar);
-// Inisialisasi array untuk menyimpan stok darah berdasarkan ukuran
 $blood_out = [
     'A' => ['250' => 0, '350' => 0, '450' => 0],
     'B' => ['250' => 0, '350' => 0, '450' => 0],
@@ -36,11 +34,9 @@ if ($result_keluar->num_rows > 0) {
         $blood_out[$row['blood_type']][$row['size']] = $row['total'];
     }
 }
-// Mengambil data masuk
-$sql_masuk = "SELECT * FROM blood_stock"; // Ganti dengan nama tabel yang sesuai
+$sql_masuk = "SELECT * FROM blood_stock WHERE status = 'aktif'"; //mengambil data masuk
 $result_masuk = $conn->query($sql_masuk);
-// Mengambil data keluar
-$sql_keluar = "SELECT * FROM blood_out"; // Ganti dengan nama tabel yang sesuai
+$sql_keluar = "SELECT * FROM blood_out"; //mengambil data keluar
 $result_keluar = $conn->query($sql_keluar);
 
 $conn->close();
@@ -72,7 +68,7 @@ $conn->close();
             display: flex;
             flex-direction: column;
             user-select: none;
-            margin-left: 20px; /* Jarak antara sidebar dan konten utama */
+            margin-left: 20px; 
         }
         .sidebar .greeting {
             font-size: 23px;
@@ -87,7 +83,7 @@ $conn->close();
             display: flex;
             flex-direction: column;
             gap: 15px;
-            flex-grow: 1; /* Memungkinkan nav untuk mengambil ruang yang tersedia */
+            flex-grow: 1; 
         }
         .sidebar nav a {
             text-decoration: none;
@@ -107,7 +103,7 @@ $conn->close();
             color: white;
         }
         .logout {
-            margin-top: auto; /* Memindahkan tombol logout ke bawah */
+            margin-top: auto; 
             margin-bottom: 20px;
             margin-left: 10px; 
             margin-right: 10px; 
@@ -115,7 +111,7 @@ $conn->close();
             color: white;
             font-weight: 700;
             font-size: 15px; 
-            padding: 5px 10px; /*jarak box dari font */
+            padding: 5px 10px; 
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -133,7 +129,7 @@ $conn->close();
             padding: 20px;
             width: 380px; 
             text-align: center;
-            margin-right: 20px; /* Jarak antara konten utama dan sidebar */
+            margin-right: 20px; 
             display: flex; 
             flex-direction: column;
             height: 100vh;
@@ -170,9 +166,8 @@ $conn->close();
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
         .data-card:last-child {
-            margin-right: 0; /* Menghilangkan margin kanan untuk kartu terakhir */
+            margin-right: 0; 
         }
-        /*bagian scrollable */
         .scrollable-part {
             flex: 1;
             overflow-y: auto;
@@ -265,27 +260,37 @@ $conn->close();
                 </tr>
             </tbody>
         </table>
-        <!-- Menampilkan data masuk -->
         <div class="data-summary">
             <h3>Data Masuk</h3>
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>No</th>
                         <th>Golongan Darah</th>
                         <th>Ukuran</th>
                         <th>Tanggal Masuk</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if ($result_masuk->num_rows > 0): ?>
+                        <?php $no = 1; ?>
                         <?php while ($row_masuk = $result_masuk->fetch_assoc()): ?>
                             <tr>
-                                <td><?php echo $row_masuk['id']; ?></td>
+                                <td><?php echo  $no++;  ?></td>
                                 <td><?php echo $row_masuk['blood_type']; ?></td>
                                 <td><?php echo $row_masuk['size']; ?> ml</td>
                                 <td><?php echo date ('H:i:s / d-m-Y', strtotime($row_masuk['tanggal_masuk'])); ?></td>
-                            </tr>
+                                <td>
+                                    <a href="edit-hapus.php?id=<?= $row_masuk['id']; ?>&action=edit">Edit</a> |
+                                    <a href="edit-hapus.php?id=<?= $row_masuk['id']; ?>&action=hapus"
+                                    onclick="return confirm('Yakin hapus data ini?')">
+                                    Hapus
+                                    </a>
+                                </td>
+                             </tr>
+                    
+
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
@@ -295,13 +300,12 @@ $conn->close();
                 </tbody>
             </table>
         </div>
-        <!-- Menampilkan data keluar -->
         <div class="data-summary">
             <h3>Data Keluar</h3>
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>No</th>
                         <th>Golongan Darah</th>
                         <th>Ukuran</th>                        
                         <th>Tanggal masuk</th>
@@ -310,9 +314,10 @@ $conn->close();
                 </thead>
                 <tbody>
                     <?php if ($result_keluar->num_rows > 0): ?>
+                        <?php $no = 1; ?>
                         <?php while ($row_keluar = $result_keluar->fetch_assoc()): ?>
                             <tr>
-                                <td><?php echo $row_keluar['id']; ?></td>
+                                <td><?php echo $no++; ?></td>
                                 <td><?php echo $row_keluar['blood_type']; ?></td>
                                 <td><?php echo $row_keluar['size']; ?> ml</td>
                                 <td><?php echo date ('H:i:s / d-m-Y', strtotime($row_keluar['tanggal_masuk'])); ?></td> <!-- Y=0000 y=00 -->
