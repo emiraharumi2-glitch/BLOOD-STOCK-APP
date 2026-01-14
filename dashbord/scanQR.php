@@ -12,7 +12,8 @@ $error = null;
 $success = null;
 $used = false;
 
-// ===================== AMBIL ID DARI QR =====================
+date_default_timezone_set('Asia/Jakarta');
+
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($id <= 0) {
     $error = "QR Code tidak valid. ID tidak ditemukan.";
@@ -28,7 +29,53 @@ $date_out_display = "";
 
 $found_active = false;
 
-/* ================= CEK DATA AKTIF ================= */
+
+if (isset($_POST['confirm_usage']) && $id > 0) {
+
+    $conn->begin_transaction();
+
+    try {
+        $stmt = $conn->prepare("
+            SELECT blood_type, size, tanggal_masuk
+            FROM blood_stock
+            WHERE id = ? AND status = 'aktif'
+        ");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->bind_result($blood_type, $size, $tanggal_masuk);
+
+        if (!$stmt->fetch()) {
+            throw new Exception("Stok darah tidak ditemukan atau sudah digunakan.");
+        }
+        $stmt->close();
+
+        $date_out = date ('Y-m-d H:i:s');
+
+        $stmt = $conn->prepare("
+            INSERT INTO blood_out (id, blood_type, size, tanggal_masuk, date_out)
+            VALUES (?, ?, ?, ?, ?)
+        ");
+        $stmt->bind_param("issss", $id, $blood_type, $size, $tanggal_masuk, $date_out);
+        $stmt->execute();
+        $stmt->close();
+
+        $stmt = $conn->prepare("
+            UPDATE blood_stock SET status = 'used' WHERE id = ?
+        ");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->close();
+        $conn->commit();
+
+        header("Location: scanQR.php?id=$id&success=1");
+        exit();
+
+    } catch (Exception $e) {
+        $conn->rollback();
+        $error = $e->getMessage();
+    }
+}
+
 $stmt = $conn->prepare("
     SELECT blood_type, size, tanggal_masuk
     FROM blood_stock
@@ -43,18 +90,18 @@ if ($stmt->fetch()) {
 }
 $stmt->close();
 
-/* ================= JIKA MASIH AKTIF ================= */
-if ($found_active) {
 
+if ($found_active) {
+  
     $dateTime = new DateTime($tanggal_masuk);
     $tanggal_masuk_post = $dateTime->format('Y-m-d H:i:s');
     $tanggal_masuk_display = $dateTime->format('H:i:s / d-m-Y');
 
 }
-/* ================= JIKA TIDAK AKTIF ================= */
+
 else {
 
-    // CEK APAKAH SUDAH DIGUNAKAN
+    
     $stmt2 = $conn->prepare("
         SELECT blood_type, size, tanggal_masuk, date_out
         FROM blood_out
@@ -66,14 +113,14 @@ else {
 
     if ($stmt2->fetch()) {
 
-        // ✅ BENAR-BENAR SUDAH DIGUNAKAN
+
         $used = true;
         $tanggal_masuk_display = (new DateTime($tanggal_masuk))->format('H:i:s / d-m-Y');
         $date_out_display = (new DateTime($date_out))->format('H:i:s / d-m-Y');
 
     } else {
 
-        // ❌ DIHAPUS SEBELUM DIGUNAKAN
+
         $error = "Data tidak ditemukan atau telah dihapus.";
 
     }

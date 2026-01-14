@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="utf-8">
     <title>Input Data Baru</title>
-    <link rel="stylesheet" href="/assets/flatpickr-4.6.13/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="../assets/flatpickr-4.6.13/dist/flatpickr.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css?family=Poppins:400,500,600,700&display=swap');
         * {
@@ -269,7 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
         </form>
     </div>
-    <script src="/assets/flatpickr-4.6.13/dist/flatpickr.min.js"></script>
+    <script src="../assets/flatpickr-4.6.13/dist/flatpickr.min.js"></script>
     <script>
         flatpickr("#tanggal_masuk", {
             dateFormat: "d-m-Y",

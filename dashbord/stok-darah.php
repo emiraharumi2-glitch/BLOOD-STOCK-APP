@@ -7,7 +7,6 @@ if (!isset($_SESSION['username'])) {
 }
 $username = $_SESSION['username']; 
 
-
 $sql_masuk = "SELECT blood_type, size, COUNT(size) as total FROM blood_stock WHERE status = 'aktif' GROUP BY blood_type, size";
 $result_masuk = $conn->query($sql_masuk); 
 $blood_stock = [

@@ -69,7 +69,7 @@ if (isset($_POST['register_username']) && isset($_POST['register_email']) && iss
                         <p> Selamat datang di Blood Stock APP! Terimakasih telah bergabung.</p>
                         <p> untuk memulai silakan lihat panduan penggunaan yang kami lampirkan di email ini:</p>
                         <ul> 
-                            <li> Akses Akun: <a href = "[http://www.blood-app.local/]"> http://www.blood-app.local/ </a></li>
+                            <li> Akses Akun: <a href = "[http://blood-app.local/]"> http://blood-app.local/ </a></li>
                         </ul>  
                         <p> Jika ada pertanyaan, hubungi: <a href="mailto:bloodstock.app1@gmail.com">bloodstock.app1@gmail.com</a></p>
                         <p> Salam, <br> Tim Blood-Stock-APP</p> 
@@ -81,8 +81,6 @@ if (isset($_POST['register_username']) && isset($_POST['register_email']) && iss
                     } else {
                     error_log("File PDF panduan tidak ditemukan: $pdf_path");
                     }   
-                    $mail->SMTDebug = 2; 
-                    $mail->Debugoutput = 'html';
                     $mail->send(); 
                 } catch (Exception $e) {
                     echo "Email tidak dapat dikirim. Kesalahan: {$mail->ErrorInfo}"; 
@@ -116,7 +114,7 @@ $conn->close(); // Menutup koneksi
             height: 100%;
             width: 100%;
             place-items: center;
-            background-image: url('images/log.png');
+            background-image: url('images/gg.png');
             background-size: cover; 
             background-position: center center; 
             background-repeat: no-repeat; 

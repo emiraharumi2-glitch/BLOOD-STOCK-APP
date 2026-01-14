@@ -34,14 +34,13 @@ $port = 80;
 $base_url = ($port == 80) ? "http://blood-app.local" : "http://blood-app.local:$port";
 $scan_url = $base_url . "/dashbord/scanQR.php?id=" . $id;
 error_log("URL untuk QR Code ID $id (singkat): " . $scan_url);
-$qr_folder = 'phpqrcode'; // Folder di dalam dashbord
+$qr_folder = 'phpqrcode'; 
 $filename = $qr_folder . '/QRcode' . $id . '.png'; 
 if (!file_exists($qr_folder)) {
     mkdir($qr_folder, 0777, true); 
 }
-$abs_filename = __DIR__ . '/' . $filename; // Path lengkap untuk generate
-if (file_exists($abs_filename)) {
-}
+$abs_filename = __DIR__ . '/' . $filename; // Path generate
+if (file_exists($abs_filename)) 
 QRcode::png($scan_url, $abs_filename, QR_ECLEVEL_H, 10, 4); 
 $file_size = file_exists($abs_filename) ? filesize($abs_filename) : 0;
 if ($file_size == 0) {
