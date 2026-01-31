@@ -10,13 +10,15 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
     if ($username === '' || $password === '') {
         $error = "Username atau password tidak diisi.";
     } else {
+        //ambil data di datasbase user
         $stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
         $stmt->bind_param("s", $username);
         $stmt->execute();
         $result = $stmt->get_result();
         $data = $result->fetch_assoc();
+        //verfifikasi pashword yang diinput dan dihas di dtabase
         if ($data && password_verify($password, $data['password'])) { 
-            $_SESSION['username'] = $data['username'];
+            $_SESSION['username'] = $data['username']; //login berhasil
             header("Location: dashbord/index.php");
             exit(); 
         } else {
@@ -25,7 +27,7 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
         $stmt->close();
     } 
 }
-
+//REGISTER
 if (isset($_POST['register_username']) && isset($_POST['register_email']) && isset($_POST['register_password']) && isset($_POST['confirm_password'])) {
     $register_username = $_POST['register_username'];
     $register_email = $_POST['register_email'];
@@ -36,7 +38,7 @@ if (isset($_POST['register_username']) && isset($_POST['register_email']) && iss
     } elseif ($register_password !== $confirm_password) {
         $error = "Password dan konfirmasi password tidak cocok.";
     } else {
-        $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
+        $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? OR email = ?"); //MENECEGAH USERNAME DAN EMAIL GANDA
         $stmt->bind_param("ss", $register_username, $register_email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -48,7 +50,7 @@ if (isset($_POST['register_username']) && isset($_POST['register_email']) && iss
             $stmt->bind_param("sss", $register_username, $register_email, $hashed_password);
             if ($stmt->execute()) {
                 $success = "Pendaftaran berhasil! Silakan login.";
-                //kirim email konfirmasi 
+                //kirim email konfirmasi (LIBRARY) 
                 require 'vendor/autoload.php'; 
                 $mail = new PHPMailer\PHPMailer\PHPMailer(true); 
                 try { 
@@ -74,7 +76,7 @@ if (isset($_POST['register_username']) && isset($_POST['register_email']) && iss
                         <p> Jika ada pertanyaan, hubungi: <a href="mailto:bloodstock.app1@gmail.com">bloodstock.app1@gmail.com</a></p>
                         <p> Salam, <br> Tim Blood-Stock-APP</p> 
                         ';
-                    $mail->AltBody = 'Kepada'.htmlspecialchars($register_username) . ', Selamat bergabung dengan Blood-Stock-APP! Kami terima kasih atas partisipasi Anda. Untuk memulai: Akses Akun: [tautan akses akun], Panduan Pengguna: [tautan panduan pengguna], Bantuan: [Harumidina0@gmail.com]. Mari bersama-sama membantu memenuhi kebutuhan stok darah. Salam, Tim Blood-Stock-APP'; 
+                    $mail->AltBody = 'Kepada'.htmlspecialchars($register_username) . ', Selamat bergabung dengan Blood-Stock-APP! Kami terima kasih atas partisipasi Anda. Untuk memulai: Akses Akun: [tautan akses akun], Panduan Pengguna: [tautan panduan pengguna], Bantuan: [bloodstock.app1@gmail.com]. Mari bersama-sama membantu memenuhi kebutuhan stok darah. Salam, Tim Blood-Stock-APP'; 
                     $pdf_path = __DIR__ . '/Panduan_pengguna/Panduan_pengguna.pdf';
                     if (file_exists($pdf_path)) {
                     $mail->addAttachment($pdf_path, 'Panduan_Pengguna.pdf');
@@ -100,6 +102,7 @@ $conn->close(); // Menutup koneksi
 <head>
     <meta charset="utf-8">
     <title>Login & Register</title>
+<!-- Memanggil Font Awesome untuk ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css?family=Poppins:400,500,600,700&display=swap');
@@ -120,6 +123,7 @@ $conn->close(); // Menutup koneksi
             background-repeat: no-repeat; 
             background-attachment: fixed; 
         }
+        /* kotak utama login register */
         .wrapper {
             width: 500px;
             background: #fff;
@@ -128,6 +132,7 @@ $conn->close(); // Menutup koneksi
             position: relative;
             overflow: hidden;
         }
+        /* bagian atas */
         .wrapper .title {
             font-size: 35px;
             font-weight: 600;
@@ -139,6 +144,7 @@ $conn->close(); // Menutup koneksi
             background: linear-gradient(-135deg,rgb(224, 17, 17));
             font-style: italic;
         }
+        /* bagian form */
         .wrapper form {
             padding: 10px 30px 30px 30px;
         }
@@ -172,6 +178,7 @@ $conn->close(); // Menutup koneksi
             transform: translateY(-50%);
             transition: all 0.3s ease;
         }
+        /*  naik ketika diisi*/
         form .field input:focus~label,
         form .field input:valid~label {
             top: 0%;
@@ -208,6 +215,7 @@ $conn->close(); // Menutup koneksi
         form .signup-link a:hover {
             text-decoration: underline;
         }
+        /* ikon */
         .toggle-password {
             position: absolute;
             right: 15px;
@@ -286,6 +294,7 @@ $conn->close(); // Menutup koneksi
         </form>
     </div>
     <script>
+         /* ikon mata di login */
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
             const icon = this.querySelector('i');
@@ -295,6 +304,8 @@ $conn->close(); // Menutup koneksi
             icon.classList.toggle('fa-eye-slash');
             this.setAttribute('aria-label', type === 'password' ? 'Show password' : 'Hide password');
         });
+        
+         /* ikon mata di register*/
         document.getElementById('toggleRegisterPassword').addEventListener('click', function() {
             const registerPasswordInput = document.getElementById('register_password');
             const icon = this.querySelector('i');
@@ -313,6 +324,8 @@ $conn->close(); // Menutup koneksi
             icon.classList.toggle('fa-eye-slash');
             this.setAttribute('aria-label', type === 'password' ? 'Show password' : 'Hide password');
         });
+        
+         /* jika menekan login atau register */
         function showRegisterForm() {
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('registerForm').style.display = 'block';

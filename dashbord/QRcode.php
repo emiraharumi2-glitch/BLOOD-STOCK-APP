@@ -40,8 +40,8 @@ if (!file_exists($qr_folder)) {
     mkdir($qr_folder, 0777, true); 
 }
 $abs_filename = __DIR__ . '/' . $filename; // Path generate
-if (file_exists($abs_filename)) 
-QRcode::png($scan_url, $abs_filename, QR_ECLEVEL_H, 10, 4); 
+if (!file_exists($abs_filename)) {
+QRcode::png($scan_url, $abs_filename, QR_ECLEVEL_H, 10, 4); }
 $file_size = file_exists($abs_filename) ? filesize($abs_filename) : 0;
 if ($file_size == 0) {
     error_log("Error: QR file $filename kosong atau gagal generate.");
